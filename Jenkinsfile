@@ -1,24 +1,28 @@
 pipeline {
     agent any
     environment {
-        ECR_REPO = "713881815267.dkr.ecr.us-east-1.amazonaws.com/ecommerce-website"
-        KUBECONFIG = "/home/ubuntu/.kube/config"  // Ensure Jenkins uses the correct kubeconfig
+        // ✅ Replace X with your actual AWS ECR repo if different
+        ECR_REPO = "X"  
+
+        // ✅ Replace X if your kubeconfig path is different
+        KUBECONFIG = "X"   // Ensure Jenkins uses the correct kubeconfig
     }
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/SampathPandula/ecommerce-website.git'
+                // ✅ Replace X with your repo URL and branch if different
+                git branch: 'main', url: 'X'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t 713881815267.dkr.ecr.us-east-1.amazonaws.com/ecommerce-website:latest .'
+                sh 'docker build -t $ECR_REPO:latest .'   // Uses ECR_REPO defined above
             }
         }
         stage('Push to ECR') {
             steps {
-                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 713881815267.dkr.ecr.us-east-1.amazonaws.com/ecommerce-website'
-                sh 'docker push 713881815267.dkr.ecr.us-east-1.amazonaws.com/ecommerce-website:latest'
+                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO'
+                sh 'docker push $ECR_REPO:latest'
             }
         }
         stage('Deploy to Kubernetes') {
@@ -29,17 +33,17 @@ pipeline {
                 // Debug: Show the contents of the deployment.yaml file
                 sh 'cat k8s/deployment.yaml'
 
-                // Verify if Kubernetes cluster is accessible
+                // ✅ Replace X with your actual EKS cluster name
                 sh '''
                     echo "Verifying Kubernetes connection"
-                    aws eks --region us-east-1 update-kubeconfig --name ecommerce-cluster # Update with your EKS cluster name
+                    X # Replace X with your EKS cluster name
                     kubectl cluster-info || { echo "Kubernetes connection failed"; exit 1; }
                 '''
 
-                // Apply the Kubernetes deployment
+                // ✅ Replace X with the correct deployment file if different
                 sh '''
                     echo "Applying Kubernetes deployment"
-                    kubectl apply -f k8s/deployment.yaml --validate=false || { echo "Kubernetes deployment failed"; exit 1; }
+                    X || { echo "Kubernetes deployment failed"; exit 1; }
                 '''
             }
         }
